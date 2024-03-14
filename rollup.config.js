@@ -26,44 +26,44 @@ const PLUGINS = [
 export default [
     {
         input: 'src/index.tsx',
-        external: ['react', 'prop-types'],
+        external: ['react'],
         output: [
             {file: pkg.main, format: 'cjs'},
             {file: pkg.module, format: 'es'},
         ],
         plugins: PLUGINS,
     },
-
-    // UMD build
-    {
-        input: 'src/index.tsx',
-        external: ['react'],
-        output: [
-            {
-                name: 'ReactPlandalf',
-                file: pkg.browser,
-                format: 'umd',
-                globals: {
-                    react: 'React',
-                },
-            },
-        ],
-        plugins: PLUGINS,
-    },
-    // Minified UMD Build
-    {
-        input: 'src/index.tsx',
-        external: ['react'],
-        output: [
-            {
-                name: 'ReactPlandalf',
-                file: pkg['browser:min'],
-                format: 'umd',
-                globals: {
-                    react: 'React',
-                },
-            },
-        ],
-        plugins: [...PLUGINS, terser()],
-    },
+    //
+    // // UMD build
+    // {
+    //     input: 'src/index.tsx',
+    //     external: ['react'],
+    //     output: [
+    //         {
+    //             name: 'ReactPlandalf',
+    //             file: pkg.browser,
+    //             format: 'umd',
+    //             globals: {
+    //                 react: 'React',
+    //             },
+    //         },
+    //     ],
+    //     plugins: PLUGINS,
+    // },
+    // // Minified UMD Build
+    // {
+    //     input: 'src/index.tsx',
+    //     external: ['react'],
+    //     output: [
+    //         {
+    //             name: 'ReactPlandalf',
+    //             file: pkg['browser:min'],
+    //             format: 'umd',
+    //             globals: {
+    //                 react: 'React',
+    //             },
+    //         },
+    //     ],
+    //     plugins: [...PLUGINS, terser()],
+    // },
 ];
