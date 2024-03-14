@@ -61,10 +61,7 @@ export const PlandalfProvider: React.FC<PropsWithChildren<PlandalfProviderProps>
                                                                                          plandalfClient,
                                                                                      }) => {
 
-    const [plandalf, setPlandalf] = useState<PlandalfClient | null>({
-        plandalf: null,
-        state: 'init',
-    });
+    const [plandalf, setPlandalf] = useState<PlandalfClient | null>(null);
 
     // console.log({agent})
 
@@ -101,14 +98,3 @@ export function usePlandalf(): PlandalfContextValue {
 
 export default PlandalfProvider;
 
-
-//https://js.stripe.com/v3/elements-inner-payment-736f1478ec7acc1d2a4d4f804f2afeff.html
-// #wait=false
-// &rtl=false
-// &componentName=payment
-// &keyMode=test
-// &apiKey=pk_test_51MsdRsBjs8NFeoh9hBOXb6Qx285XM4uW9NdVwby7Jyxwdgg5kGnQ8FczVfEjcrRoz8zwABEWVvlHPaQhklJGiBuu00WXOfeLMJ
-// &referrer=http%3A%2F%2Flocalhost%3A8080%2Fproducts
-// &controllerId=__privateStripeController6561
-
-// should return the plandalf object along with all the

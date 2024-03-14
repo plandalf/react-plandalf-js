@@ -1,27 +1,69 @@
-import peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import resolve from '@rollup/plugin-node-resolve';
+import {babel} from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from '@rollup/plugin-typescript';
-import { terser } from 'rollup-plugin-terser';
+import {nodeResolve} from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import terser from '@rollup/plugin-terser';
+import ts from 'rollup-plugin-ts';
+import pkg from './package.json';
 
-const packageJson = require('./package.json');
+const PLUGINS = [
+    commonjs(),
+    ts({
+        tsconfig: 'tsconfig.json',
+        transpileOnly: true,
+    }),
+    nodeResolve(),
+    babel({
+        extensions: ['.ts', '.js', '.tsx', '.jsx'],
+    }),
+    replace({
+        'process.env.NODE_ENV': JSON.stringify('production'),
+        _VERSION: JSON.stringify(pkg.version),
+        preventAssignment: true,
+    }),
+];
 
-export default {
-    input: 'src/index.tsx', // Adjust based on your entry file
-    output: [
-        {
-            file: packageJson.main,
-            format: 'cjs',
-            sourcemap: true,
-            exports: 'named' // Use 'named' to clarify how exports should be accessed
-        }
-    ],
-    plugins: [
-        peerDepsExternal(),
-        resolve(),
-        commonjs(),
-        typescript({ tsconfig: './tsconfig.json' }), // Make sure tsconfig.json path is correct
-        terser()
-    ],
-    external: ['react', 'react-dom'] // Mark react and react-dom as external
-};
+export default [
+    {
+        input: 'src/index.tsx',
+        external: ['react', 'prop-types'],
+        output: [
+            {file: pkg.main, format: 'cjs'},
+            {file: pkg.module, format: 'es'},
+        ],
+        plugins: PLUGINS,
+    },
+
+    // UMD build
+    {
+        input: 'src/index.tsx',
+        external: ['react'],
+        output: [
+            {
+                name: 'ReactPlandalf',
+                file: pkg.browser,
+                format: 'umd',
+                globals: {
+                    react: 'React',
+                },
+            },
+        ],
+        plugins: PLUGINS,
+    },
+    // Minified UMD Build
+    {
+        input: 'src/index.tsx',
+        external: ['react'],
+        output: [
+            {
+                name: 'ReactPlandalf',
+                file: pkg['browser:min'],
+                format: 'umd',
+                globals: {
+                    react: 'React',
+                },
+            },
+        ],
+        plugins: [...PLUGINS, terser()],
+    },
+];
