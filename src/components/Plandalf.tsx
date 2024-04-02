@@ -22,79 +22,81 @@ function logErrorToService(error: Error, errorInfo: React.ErrorInfo) {
     console.log('logging an error!');
 }
 
-// class SDKErrorBoundary extends React.Component {
-//     state = { hasError: false, error: null };
-//
-//     static getDerivedStateFromError(error) {
-//         // You can determine if the error is from your SDK
-//         if (isSdkError(error)) {
-//             return { hasError: true, error };
-//         }
-//         // If it's not an SDK error, we won't handle it here
-//         return null;
-//     }
-//
-//     componentDidCatch(error, errorInfo) {
-//         if (isSdkError(error)) {
-//             // Log SDK errors or handle them as needed
-//             logErrorToService(error, errorInfo);
-//         } else {
-//             // If it's not an SDK error, rethrow it
-//             throw error;
-//         }
-//     }
-//
-//     render() {
-//         // Always render children, ignore SDK issues
-//         return this.props.children;
-//     }
-// }
+class SDKErrorBoundary extends React.Component {
+    state = { hasError: false, error: null };
+
+    static getDerivedStateFromError(error) {
+        // You can determine if the error is from your SDK
+        if (isSdkError(error)) {
+            return { hasError: true, error };
+        }
+        // If it's not an SDK error, we won't handle it here
+        return null;
+    }
+
+    componentDidCatch(error, errorInfo) {
+        if (isSdkError(error)) {
+            // Log SDK errors or handle them as needed
+            logErrorToService(error, errorInfo);
+        } else {
+            // If it's not an SDK error, rethrow it
+            throw error;
+        }
+    }
+
+    render() {
+        // Always render children, ignore SDK issues
+        return this.props.children;
+    }
+}
 
 export const usePlandalf = (): PlandalfContextValue | null => {
     return React.useContext(PlandalfContext);
 }
 
+export type PlandalfEvent = {
+    type: string
+    payload: any
+}
+
 interface PlandalfProviderProps {
-    clientId: string
+    client: string
     agent: string
     children: any
-    theme: any
-    locale: string
+    listen: Function;
     plandalfClient?: Plandalf
 }
 
 export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProviderProps>> = ({
-    children,
-    clientId,
+    children, client,
     agent,
-    // locale,
+    listen,
     plandalfClient,
 }) => {
     const [ctx, setContext] = React.useState<PlandalfContextValue | null>(null);
 
     React.useEffect(() => {
-        console.log("USING EFFECTS!");
         if (!agent) return;
         if (plandalfClient) {
             setContext({
                 plandalf: plandalfClient
             });
         } else {
-            loadPlandalf(agent, {clientId})
-            .then((p: Plandalf) => {
-                p.on('load', (pd: Plandalf) => setContext({ plandalf: pd }));
-                setContext({ plandalf: p })
-            });
+            loadPlandalf(agent, {clientId: client})
+                .then((p: Plandalf) => {
+                    p.on('load', (pd: Plandalf) => setContext({ plandalf: pd }));
+                    setContext({ plandalf: p })
+                });
         }
     }, [
         agent,
     ]);
 
     return (
+        <SDKErrorBoundary>
             <PlandalfContext.Provider value={ctx}>
                 {children}
             </PlandalfContext.Provider>
+        </SDKErrorBoundary>
     )
-        // <SDKErrorBoundary>
-        // </SDKErrorBoundary>
 }
