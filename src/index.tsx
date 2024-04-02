@@ -1,5 +1,3 @@
-import React, {createContext, useContext } from "react";
-
 import { Plandalf } from "@plandalf/plandalf-js"
 export  {PlandalfProvider, PlandalfContextValue, usePlandalf, PlandalfContext} from "./components/Plandalf";
 
