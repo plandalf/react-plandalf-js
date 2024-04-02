@@ -1,6 +1,6 @@
 {
   "name": "@plandalf/react-plandalf-js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Plandalf React JS library",
   "main": "dist/react-plandalf.js",
   "module": "dist/react-plandalf.esm.mjs",
@@ -9,8 +9,9 @@
   "browser": "dist/react-plandalf.umd.js",
   "types": "dist/react-plandalf.d.ts",
   "scripts": {
-    "build": "rollup -c --bundleConfigAsCjs",
-    "dev": "rollup -c --bundleConfigAsCjs -w"
+    "build": "rollup -c --bundleConfigAsCjs  && npm run checkimport",
+    "dev": "rollup -c --bundleConfigAsCjs -w",
+    "checkimport": "./check-imports"
   },
   "keywords": [
     "react",
@@ -28,7 +29,7 @@
     "src"
   ],
   "dependencies": {
-    "@plandalf/plandalf-js": "^0.1.3"
+    "@plandalf/plandalf-js": "^0.1.5"
   },
   "publishConfig": {
     "access": "public"
@@ -38,7 +39,7 @@
   },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
-    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
+    "react-dom": "^16.3.0 || ^17.0.0 || ^18.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.7.1",
