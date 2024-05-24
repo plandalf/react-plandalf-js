@@ -37,6 +37,7 @@ export type PlandalfProviderProps = {
     children: any
     theme: any
     locale: string
+    sdkUrl: string;
     plandalfClient?: Plandalf
 }
 

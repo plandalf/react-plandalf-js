@@ -1,7 +1,6 @@
 import {FunctionComponent, PropsWithChildren} from "react";
 import React from "react";
 
-// import {PlandalfContextValue} from "../index";
 import {loadPlandalf, Plandalf} from "@plandalf/plandalf-js";
 
 export interface PlandalfContextValue {

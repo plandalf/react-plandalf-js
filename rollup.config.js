@@ -30,6 +30,7 @@ export default [
         // external: ['react'],
         output: [
             {file: pkg.main, format: 'cjs'},
+            // {file: pkg.main, format: 'umd', name: 'ReactPlandalf', globals: {react: 'React'}},
             {file: pkg.module, format: 'es'},
         ],
         plugins: PLUGINS,
