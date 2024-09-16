@@ -1,0 +1,54 @@
+name: Test and Deploy
+
+on:
+  push:
+    branches-ignore:
+      - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    name: Deploy to npm
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Update package.json version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i 's/"version": ".*"/"version": "'$VERSION'"/' package.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check required variables
+        run: |
+          if [ -z "${{ vars.CDN_DOMAIN }}" ] || [ -z "${{ vars.SDK_PATH }}" ]; then
+            echo "Error: CDN_DOMAIN and/or SDK_PATH are not set in repository variables."
+            exit 1
+          fi
+
+      - name: Build
+        run: npm run build --if-present
+        env:
+          CI: true
+          NODE_ENV: production
+          CDN_DOMAIN: ${{ vars.CDN_DOMAIN }}
+          SDK_PATH: ${{ vars.SDK_PATH }}
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
