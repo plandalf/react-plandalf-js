@@ -1,6 +1,6 @@
 {
   "name": "@plandalf/react-plandalf-js",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Plandalf React JS library",
   "main": "dist/react-plandalf.js",
   "module": "dist/react-plandalf.esm.mjs",

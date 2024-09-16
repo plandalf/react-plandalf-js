@@ -18,11 +18,6 @@ interface PlandalfProps {
 }
 
 export interface PlandalfClient {
-    //
-    // createCheckout(options: {
-    //   redirect: 'test'
-    // }): Promise<CheckoutResult>
-
     state: string;
 }
 
@@ -33,10 +28,11 @@ interface PlandalfClientConfig {
 
 export type PlandalfProviderProps = {
     clientId: string
-    agent: string
+    agent: string | undefined
     children: any
     theme: any
     locale: string
+    sdkUrl: string;
     plandalfClient?: Plandalf
 }
 

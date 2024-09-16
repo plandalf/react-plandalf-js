@@ -1,20 +1,22 @@
 import {FunctionComponent, PropsWithChildren} from "react";
 import React from "react";
-
-// import {PlandalfContextValue} from "../index";
 import {loadPlandalf, Plandalf} from "@plandalf/plandalf-js";
 
-export interface PlandalfContextValue {
-    plandalf: Plandalf
-}
-
-export const PlandalfContext = React.createContext<PlandalfContextValue | null>(
-    null
-);
+export const PlandalfContext = React.createContext<PlandalfContextValue>({
+  plandalf: undefined,
+  state: 'loading'
+});
 PlandalfContext.displayName = 'PlandalfContext';
 
+class PlandalfError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'PlandalfError';
+    }
+}
+
 function isSdkError(error) {
-    return false;
+    return error instanceof PlandalfError;
 }
 
 function logErrorToService(error: Error, errorInfo: React.ErrorInfo) {
@@ -50,7 +52,7 @@ class SDKErrorBoundary extends React.Component {
     }
 }
 
-export const usePlandalf = (): PlandalfContextValue | null => {
+export const usePlandalf = (): PlandalfContextValue => {
     return React.useContext(PlandalfContext);
 }
 
@@ -60,43 +62,54 @@ export type PlandalfEvent = {
 }
 
 interface PlandalfProviderProps {
-    client: string
-    agent: string
-    children: any
-    listen: Function;
-    plandalfClient?: Plandalf
+    client?: string
+    agent?: string
+    apiUrl?: string
+    children?: any
+    listen?: Function;
+    plandalf?: Plandalf
+}
+
+export interface PlandalfContextValue {
+  plandalf?: Plandalf
+  state: 'loading' | 'loaded' | 'error'
 }
 
 export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProviderProps>> = ({
-    children, client,
-    agent,
-    listen,
-    plandalfClient,
+  children,
+  client,
+  agent,
+  listen,
+  plandalf,
+  apiUrl
 }) => {
-    const [ctx, setContext] = React.useState<PlandalfContextValue | null>(null);
+  const [ctx, setContext] = React.useState<PlandalfContextValue>({
+    plandalf: undefined,
+    state: 'loading'
+  });
 
-    React.useEffect(() => {
-        if (!agent) return;
-        if (plandalfClient) {
-            setContext({
-                plandalf: plandalfClient
-            });
-        } else {
-            loadPlandalf(agent, {clientId: client})
-                .then((p: Plandalf) => {
-                    p.on('load', (pd: Plandalf) => setContext({ plandalf: pd }));
-                    setContext({ plandalf: p })
-                });
-        }
-    }, [
-        agent,
-    ]);
+  React.useEffect(() => {
+    if (plandalf) {
+      // if plandalf already exists on window
+      setContext({plandalf, state: 'loaded'});
+    } else {
+      // Load the script
+      loadPlandalf(agent, {clientId: client, apiUrl})
+        .then((p: Plandalf | null) => {
+          if (p) {
+            setContext({ plandalf: p, state: 'loaded' });
+          } else {
+            setContext({ plandalf: undefined, state: 'error' });
+          }
+        });
+    }
+  }, [agent]);
 
-    return (
-        <SDKErrorBoundary>
-            <PlandalfContext.Provider value={ctx}>
-                {children}
-            </PlandalfContext.Provider>
-        </SDKErrorBoundary>
-    )
+  return (
+    <SDKErrorBoundary>
+      <PlandalfContext.Provider value={ctx}>
+        {children}
+      </PlandalfContext.Provider>
+    </SDKErrorBoundary>
+  )
 }
