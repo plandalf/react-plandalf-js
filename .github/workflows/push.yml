@@ -33,13 +33,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check required variables
-        run: |
-          if [ -z "${{ vars.CDN_DOMAIN }}" ] || [ -z "${{ vars.SDK_PATH }}" ]; then
-            echo "Error: CDN_DOMAIN and/or SDK_PATH are not set in repository variables."
-            exit 1
-          fi
-
       - name: Build
         run: npm run build --if-present
         env:
