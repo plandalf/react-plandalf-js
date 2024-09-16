@@ -9,13 +9,13 @@ export const PlandalfContext = React.createContext<PlandalfContextValue>({
 PlandalfContext.displayName = 'PlandalfContext';
 
 class PlandalfError extends Error {
-    constructor(message) {
+    constructor(message: string) {
         super(message);
         this.name = 'PlandalfError';
     }
 }
 
-function isSdkError(error) {
+function isSdkError(error: Error) {
     return error instanceof PlandalfError;
 }
 
@@ -27,7 +27,7 @@ function logErrorToService(error: Error, errorInfo: React.ErrorInfo) {
 class SDKErrorBoundary extends React.Component {
     state = { hasError: false, error: null };
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(error: Error) {
         // You can determine if the error is from your SDK
         if (isSdkError(error)) {
             return { hasError: true, error };
@@ -36,7 +36,7 @@ class SDKErrorBoundary extends React.Component {
         return null;
     }
 
-    componentDidCatch(error, errorInfo) {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         if (isSdkError(error)) {
             // Log SDK errors or handle them as needed
             logErrorToService(error, errorInfo);
@@ -48,7 +48,7 @@ class SDKErrorBoundary extends React.Component {
 
     render() {
         // Always render children, ignore SDK issues
-        return this.props.children;
+        return this.props.children as React.ReactNode;
     }
 }
 
