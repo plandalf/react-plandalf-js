@@ -1,12 +1,48 @@
 import {FunctionComponent, PropsWithChildren} from "react";
 import React from "react";
 import {loadPlandalf, Plandalf} from "@plandalf/plandalf-js";
+import { PlandalfProviderProps } from "..";
 
 export const PlandalfContext = React.createContext<PlandalfContextValue>({
   plandalf: undefined,
   state: 'loading'
 });
 PlandalfContext.displayName = 'PlandalfContext';
+
+
+interface Inclusion {
+  feature: string;
+  charges?: number;
+  limits?: number;
+  // ... other attributes
+}
+
+interface Plan {
+  name: string;
+  inclusions: Inclusion[];
+}
+
+interface User {
+  id: number;
+  name: string;
+  plan: string;
+  entitlements: string[];
+}
+
+interface FlowCondition {
+  type: string;
+  value: any;
+}
+
+interface FlowConfig {
+  name: string;
+  conditions: FlowCondition[];
+}
+
+interface GateConfig {
+  name: string;
+  flows: FlowConfig[];
+}
 
 class PlandalfError extends Error {
     constructor(message: string) {
@@ -61,15 +97,6 @@ export type PlandalfEvent = {
     payload: any
 }
 
-interface PlandalfProviderProps {
-    client?: string
-    agent?: string
-    apiUrl?: string
-    children?: any
-    listen?: Function;
-    plandalf?: Plandalf
-}
-
 export interface PlandalfContextValue {
   plandalf?: Plandalf
   state: 'loading' | 'loaded' | 'error'
@@ -79,9 +106,9 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
   children,
   client,
   agent,
-  listen,
   plandalf,
-  apiUrl
+  apiUrl,
+  sdkUrl,
 }) => {
   const [ctx, setContext] = React.useState<PlandalfContextValue>({
     plandalf: undefined,
@@ -94,7 +121,7 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
       setContext({plandalf, state: 'loaded'});
     } else {
       // Load the script
-      loadPlandalf(agent, {clientId: client, apiUrl})
+      loadPlandalf(agent, {clientId: client, apiUrl, sdkUrl})
         .then((p: Plandalf | null) => {
           if (p) {
             setContext({ plandalf: p, state: 'loaded' });
@@ -113,3 +140,41 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
     </SDKErrorBoundary>
   )
 }
+
+
+const Gate = ({ children, name, onUnlock }: { children: Function | React.ReactNode, name: string, onUnlock: Function }) => {
+  const { plandalf } = usePlandalf();
+  
+  const element = plandalf?.element(name);
+  const hasAccess = !element?.active(); 
+
+  const callElementUnlock = () => element?.call('unlock') || Promise.reject(new Error('Element not found'));
+
+  const handleUnlock = () => {
+    return new Promise<void>((resolve, reject) => {
+      callElementUnlock()
+        .then((res) => {
+          if (res.success) {
+            onUnlock && onUnlock(res);
+            resolve(res);
+          } 
+        })
+        .catch((err: any) => {
+          reject(err);
+        });
+    });
+  };
+
+  if (typeof children === 'function') {
+    return children(hasAccess, handleUnlock);
+  }
+
+  return (
+    <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+      <p className="font-bold">No access to this feature</p>
+      <button onClick={handleUnlock}>Upgrade now</button>
+    </div>
+  );
+}
+
+export {Gate};

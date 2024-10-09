@@ -1,5 +1,5 @@
 import { Plandalf } from "@plandalf/plandalf-js"
-export  {PlandalfProvider, PlandalfContextValue, usePlandalf, PlandalfContext} from "./components/Plandalf";
+export  {PlandalfProvider, PlandalfContextValue, usePlandalf, PlandalfContext, Gate} from "./components/Plandalf";
 
 // export interface PlandalfContextValue {
 //     state: string
@@ -11,6 +11,12 @@ export  {PlandalfProvider, PlandalfContextValue, usePlandalf, PlandalfContext} f
 //     locale: string
 //     theme: any
 // }
+
+// interface Gate {
+//   name: string;
+//   children: Function | React.ReactNode;
+// }
+
 interface PlandalfProps {
     client_id: string
     agent: string
@@ -27,12 +33,13 @@ interface PlandalfClientConfig {
 }
 
 export type PlandalfProviderProps = {
-    clientId: string
-    agent: string | undefined
-    children: any
-    theme: any
-    locale: string
-    sdkUrl: string;
+    client?: string
+    agent?: string
+    children?: any
+    listen?: Function;
+    plandalf?: Plandalf
+    apiUrl?: string
+    sdkUrl?: string;
     plandalfClient?: Plandalf
 }
 
