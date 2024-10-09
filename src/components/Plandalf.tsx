@@ -142,7 +142,7 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
 }
 
 
-const Gate = ({ children, name, onUnlock }: { children: Function | React.ReactNode, name: string, onUnlock: Function }) => {
+const Gate = ({ children, name, onUnlock }: { children: Function | React.ReactNode, name: string, onUnlock?: Function }) => {
   const { plandalf } = usePlandalf();
   
   const element = plandalf?.element(name);
@@ -160,13 +160,17 @@ const Gate = ({ children, name, onUnlock }: { children: Function | React.ReactNo
           } 
         })
         .catch((err: any) => {
-          reject(err);
+          reject(err?.message || err);
         });
     });
   };
 
   if (typeof children === 'function') {
     return children(hasAccess, handleUnlock);
+  }
+
+  if (hasAccess) {
+    return children;
   }
 
   return (
