@@ -29,7 +29,7 @@
     "src"
   ],
   "dependencies": {
-    "@plandalf/plandalf-js": "^0.1.15"
+    "@plandalf/plandalf-js": "^0.1.16"
   },
   "publishConfig": {
     "access": "public"
