@@ -42,6 +42,3 @@ export type PlandalfProviderProps = {
     sdkUrl?: string;
     plandalfClient?: Plandalf
 }
-
-
-
