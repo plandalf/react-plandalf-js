@@ -107,6 +107,7 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
   client,
   agent,
   plandalf,
+  listen,
   apiUrl,
   sdkUrl,
 }) => {
@@ -121,7 +122,7 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
       setContext({plandalf, state: 'loaded'});
     } else {
       // Load the script
-      loadPlandalf(agent, {clientId: client, apiUrl, sdkUrl})
+      loadPlandalf(agent, {clientId: client, apiUrl, sdkUrl, listen})
         .then((p: Plandalf | null) => {
           if (p) {
             setContext({ plandalf: p, state: 'loaded' });
