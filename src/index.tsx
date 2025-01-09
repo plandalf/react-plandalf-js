@@ -25,6 +25,7 @@ interface PlandalfProps {
 
 export interface PlandalfClient {
     state: string;
+    action: Function;
 }
 
 interface PlandalfClientConfig {
