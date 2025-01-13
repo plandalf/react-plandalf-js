@@ -3,9 +3,60 @@ import React from "react";
 import {loadPlandalf, Plandalf} from "@plandalf/plandalf-js";
 import { PlandalfProviderProps } from "..";
 
+
+interface Intelligence {
+  view: (params: any) => void;
+  action: (type: string, context?: object, metadata?: object) => void;
+  _queue?: QueuedAction[];
+  _clearQueue?: () => void;
+}
+
+interface Customer {
+  name: string;
+  value: any;
+}
+
+// Create a singleton queue manager outside of React
+const PlandalfQueue = {
+  actions: [] as QueuedAction[],
+  add(action: QueuedAction) {
+    this.actions.push(action);
+  },
+  process(plandalf: Plandalf) {
+    this.actions.forEach(action => {
+      if (action.type === 'view') {
+        plandalf.intel.view(action.params);
+      } else if (action.type === 'action') {
+        plandalf.intel.action(action.actionType!, action.context, action.metadata);
+      }
+    });
+    this.clear();
+  },
+  clear() {
+    this.actions = [];
+  }
+};
+
+// Update the context to use the queue
 export const PlandalfContext = React.createContext<PlandalfContextValue>({
   plandalf: undefined,
-  state: 'loading'
+  state: 'loading',
+  gate: () => {},
+  intel: {
+    view: (params: any) => {
+      PlandalfQueue.add({ type: 'view', params });
+    },
+    action: (type: string, context = {}, metadata = {}) => {
+      PlandalfQueue.add({ 
+        type: 'action', 
+        actionType: type,
+        context,
+        metadata,
+        params: null 
+      });
+    }
+  } as Intelligence,
+  customer: {} as Customer,
 });
 PlandalfContext.displayName = 'PlandalfContext';
 
@@ -42,6 +93,14 @@ interface FlowConfig {
 interface GateConfig {
   name: string;
   flows: FlowConfig[];
+}
+
+interface QueuedAction {
+  type: 'view' | 'action';
+  params: any;
+  actionType?: string;
+  context?: object;
+  metadata?: object;
 }
 
 class PlandalfError extends Error {
@@ -100,6 +159,9 @@ export type PlandalfEvent = {
 export interface PlandalfContextValue {
   plandalf?: Plandalf
   state: 'loading' | 'loaded' | 'error'
+  gate: (name: string, onUnlock: Function) => void
+  intel: Intelligence
+  customer: Customer
 }
 
 export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProviderProps>> = ({
@@ -113,25 +175,88 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
 }) => {
   const [ctx, setContext] = React.useState<PlandalfContextValue>({
     plandalf: undefined,
-    state: 'loading'
+    state: 'loading',
+    gate: () => {},
+    intel: {
+      view: (params: any) => {
+        PlandalfQueue.add({ type: 'view', params });
+      },
+      action: (type: string, context = {}, metadata = {}) => {
+        PlandalfQueue.add({ 
+          type: 'action', 
+          actionType: type,
+          context,
+          metadata,
+          params: null 
+        });
+      }
+    } as Intelligence,
+    customer: {} as Customer
   });
 
   React.useEffect(() => {
+    const handlePlandalfUpdate = (p: Plandalf) => {
+      // Process any queued actions first
+      PlandalfQueue.process(p);
+      
+      // Create wrapped intel object that directly uses Plandalf
+      const wrappedIntel = {
+        ...p.intel,
+        view: (params: any) => {
+          p.intel.view(params);
+        },
+        action: (type: string, context = {}, metadata = {}) => {
+          p.intel.action(type, context, metadata);
+        }
+      };
+
+      setContext({
+        plandalf: p,
+        state: 'loaded',
+        gate: p.gate || (() => {}),
+        intel: wrappedIntel,
+        customer: p.customer || {}
+      });
+    };
+
     if (plandalf) {
       // if plandalf already exists on window
-      setContext({plandalf, state: 'loaded'});
+      handlePlandalfUpdate(plandalf);
     } else {
       // Load the script
       loadPlandalf(agent, {clientId: client, apiUrl, sdkUrl, listen})
         .then((p: Plandalf | null) => {
           if (p) {
-            setContext({ plandalf: p, state: 'loaded' });
+            handlePlandalfUpdate(p);
+            
+            // Set up event listeners for plandalf updates
+            p.on?.('update', (event: string, args: [Plandalf]) => {
+              handlePlandalfUpdate(args[0]);
+            });
           } else {
-            setContext({ plandalf: undefined, state: 'error' });
+            setContext(prev => ({
+              ...prev,
+              plandalf: undefined,
+              state: 'error'
+            }));
           }
+        })
+        .catch(() => {
+          setContext(prev => ({
+            ...prev,
+            plandalf: undefined,
+            state: 'error'
+          }));
         });
     }
-  }, [agent]);
+
+    // Cleanup function to remove event listeners
+    return () => {
+      if (plandalf?.off) {
+        plandalf.off('update');
+      }
+    };
+  }, [agent, client, apiUrl, sdkUrl, listen]);
 
   return (
     <SDKErrorBoundary>
