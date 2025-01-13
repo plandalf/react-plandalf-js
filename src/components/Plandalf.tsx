@@ -20,21 +20,13 @@ interface Customer {
 const PlandalfQueue = {
   actions: [] as QueuedAction[],
   add(action: QueuedAction) {
-    console.debug('[Plandalf] Queueing action:', action);
     this.actions.push(action);
   },
   process(plandalf: Plandalf) {
-    console.debug('[Plandalf] Processing queue:', this.actions.length);
     this.actions.forEach(action => {
       if (action.type === 'view') {
-        console.debug('[Plandalf] Processing view action:', action.params);
         plandalf.intel.view(action.params);
       } else if (action.type === 'action') {
-        console.debug('[Plandalf] Processing intel action:', {
-          type: action.actionType,
-          context: action.context,
-          metadata: action.metadata
-        });
         plandalf.intel.action(action.actionType!, action.context, action.metadata);
       }
     });
@@ -42,7 +34,6 @@ const PlandalfQueue = {
   },
   clear() {
     this.actions = [];
-    console.debug('[Plandalf] Queue cleared');
   }
 };
 
@@ -205,7 +196,6 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
 
   React.useEffect(() => {
     const handlePlandalfUpdate = (p: Plandalf) => {
-      console.log('handlePlandalfUpdate', p);
       // Process any queued actions first
       PlandalfQueue.process(p);
       
@@ -213,11 +203,9 @@ export const PlandalfProvider: FunctionComponent<PropsWithChildren<PlandalfProvi
       const wrappedIntel = {
         ...p.intel,
         view: (params: any) => {
-          console.debug('[Plandalf] Executing view action:', params);
           p.intel.view(params);
         },
         action: (type: string, context = {}, metadata = {}) => {
-          console.debug('[Plandalf] Executing intel action:', { type, context, metadata, p });
           p.intel.action(type, context, metadata);
         }
       };
